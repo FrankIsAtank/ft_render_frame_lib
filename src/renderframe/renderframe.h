@@ -4,6 +4,7 @@
 #include "renderframeparams.h"
 
 // standard headers
+#include <future>
 #include <memory>
 
 namespace ft {
@@ -61,6 +62,10 @@ private:
 private:
     // The frame's parameters
     t_render_frame_params m_params;
+
+    // Worker thread that owns the render frame and
+    //  runs its message loop
+    std::future<void> m_worker;
 
     // Actual implementation
     std::unique_ptr<render_frame_impl, t_deleter<render_frame_impl>> m_impl;

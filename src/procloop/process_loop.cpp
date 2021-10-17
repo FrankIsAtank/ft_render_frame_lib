@@ -4,28 +4,32 @@
 #include "renderframe/renderframe.h"
 #include "renderframe/renderframe_impl.h"
 
-// Constructor
-// Starts the worker thread
-ft::rf::procloop::process_loop::process_loop(render_frame_impl* p_render_frame) :
-    m_impl(new process_loop_impl())
-{
-    if (p_render_frame != nullptr)
-    {
-        m_impl->start(p_render_frame->native_handle());
-    }
-    else
-    {
-        m_impl->start(nullptr);
-    }
-}
-
+// ft_base_lib headers
+#include "error/ft_assert.h"
 
 // Destructor
 // Joins the worker thread
 ft::rf::procloop::process_loop::~process_loop()
 {
-    m_impl->stop();
-    m_impl->join();
+    if (m_impl != nullptr) {
+        m_impl->stop();
+    }
+}
+
+
+// The calling thread will run this process loop
+void ft::rf::procloop::process_loop::run_loop(
+    render_frame_impl& p_render_frame,
+    std::promise<void>& p_ready_to_start)
+{
+    FT_ASSERT(m_impl == nullptr);
+    
+    // Create the actual implementation object
+    m_impl.reset(new process_loop_impl());
+
+    // Start it
+    // This only returns when the process loop exits
+    m_impl->run_loop(p_render_frame.native_handle(), p_ready_to_start);
 }
 
 

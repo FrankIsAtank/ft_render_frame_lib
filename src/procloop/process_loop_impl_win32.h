@@ -6,7 +6,7 @@
 
 // standard headers
 #include <optional>
-#include <thread>
+#include <future>
 
 #ifdef FT_OS_WINDOWS
 
@@ -17,31 +17,18 @@ namespace procloop {
 class process_loop_impl
 {
 public:
-    // Start the worker thread
-    // Call after construction
-    void start(const ::HWND p_window);
+    // The calling thread will run this processing loop
+    // It will only return when `stop()` is called
+    // Sets the `p_ready` promise once the worker has started the loop
+    void run_loop(const ::HWND p_window, std::promise<void> & p_ready);
 
     // End the worker thread
-    // Call before joining
+    // Does nothing if no worker thread is running
     void stop() noexcept;
 
-    // Join a stopped or stopping worker
-    void join() noexcept;
-
 private:
-    // Worker entry point
-    void worker_function();
-
-private:
-    // Special HWND handle value to indicate no window
-    static inline constexpr auto s_no_window = reinterpret_cast<::HWND>(-1);
-
-private:
-    // Worker thread
-    std::thread m_worker;
-
-    // WINAPI thread ID of the worker thread
-    std::optional<DWORD> m_thread_id;
+    // Native thread handle to the thread currently running this process loop
+    std::optional<DWORD> m_worker_handle;
 
 };  // class process_loop_impl
 

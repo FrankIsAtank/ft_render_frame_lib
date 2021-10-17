@@ -1,6 +1,7 @@
 #pragma once
 
 // standard headers
+#include <future>
 #include <memory>
 
 namespace ft {
@@ -18,13 +19,10 @@ class process_loop final
 {
 public:
     // Constructor
-    // Starts the worker thread
-    // If a render frame pointer is provided the process loop
-    //  instance manages that render frame's messages
-    process_loop(render_frame_impl* p_render_frame);
+    process_loop() = default;
 
     // Destructor
-    // Joins the worker thread
+    // Stops the worker thread if there is one
     ~process_loop();
 
     // Not copiable
@@ -34,6 +32,12 @@ public:
     // Moveable
     process_loop(process_loop&&) noexcept = default;
     process_loop& operator=(process_loop&&) noexcept = default;
+
+    // The calling thread will run this process loop
+    // `p_ready_to_start` will be set when the process loop is initialized
+    void run_loop(
+        render_frame_impl& p_render_frame,
+        std::promise<void> & p_ready_to_start);
 
 private:
     // process_loop_impl deleter

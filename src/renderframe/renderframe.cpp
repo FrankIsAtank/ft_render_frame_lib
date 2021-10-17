@@ -8,12 +8,30 @@
 // ft_base_lib headers
 #include "error/ft_assert.h"
 
+
 // Constructor
 ft::rf::render_frame::render_frame(t_render_frame_params p_params) :
-    m_params{std::move(p_params)},
-    m_impl{ new render_frame_impl(m_params) },
-    m_process_loop{ new procloop::process_loop(m_impl.get()) }
-{ }
+    m_params{std::move(p_params)}
+{
+    // Create a promise to know when initialization finishes
+    auto ready = std::promise<void>{};
+    auto ready_future = ready.get_future();
+
+    // Spawn a worker to create the render frame and to run
+    //  it's process loop
+    m_worker = std::async(std::launch::async, [this, ready = std::move(ready)]() mutable
+    {
+        // Create the render frame instance
+        this->m_impl.reset(new render_frame_impl(this->m_params));
+
+        // Create and start the process loop
+        this->m_process_loop.reset(new procloop::process_loop());
+        this->m_process_loop->run_loop(*(this->m_impl), ready);
+    });
+
+    // Wait for the process loop to be initialized
+    ready_future.get();
+}
 
 
 // Get the window's initial parameters
